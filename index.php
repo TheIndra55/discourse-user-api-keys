@@ -67,7 +67,7 @@ else
 
     curl_setopt($ch, CURLOPT_URL, BASE_URL . "/session/current.json");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ["User-Api-Key: " . $key, "User-Agent: Mozilla/5.0 (User API keys)"]);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["User-Api-Key: " . $key, "User-Api-Client-Id: " . APP_CLIENT_ID]);
 
     if (($body = curl_exec($ch)) == false)
     {
