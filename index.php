@@ -6,14 +6,8 @@ define("BASE_URL", "https://forum.cfx.re");
 
 define("REDIRECT_URL", "http://localhost:8000");
 define("APP_NAME", "Your app");
-
-if (!isset($_COOKIE["CLIENT_ID"])) {
-    define("CLIENT_ID", uniqid());
-    setcookie("CLIENT_ID", CLIENT_ID, time() + 60, "/");
-}
-else {
-    define("CLIENT_ID", $_COOKIE["CLIENT_ID"]);
-}
+define("CLIENT_ID", uniqid());
+setcookie("CLIENT_ID", CLIENT_ID, time() + 60, "/");
 
 // open our keypair
 $keypair = openssl_pkey_get_private(file_get_contents("keypair.pem"));
@@ -74,7 +68,7 @@ else
 
     curl_setopt($ch, CURLOPT_URL, BASE_URL . "/session/current.json");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ["User-Api-Key: " . $key, "User-Api-Client-Id: " . CLIENT_ID]);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["User-Api-Key: " . $key, "User-Api-Client-Id: " . $_COOKIE["CLIENT_ID"]]);
 
     if (($body = curl_exec($ch)) == false)
     {
