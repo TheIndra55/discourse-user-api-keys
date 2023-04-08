@@ -85,4 +85,12 @@ else
 
     // display information about current user
     echo "<h1>Welcome, " . $session->current_user->username . "!</h1>";
+
+    // Revoke user api key once done
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, BASE_URL . "/user-api-key/revoke");
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["User-Api-Key: " . $key]);
+    $response = curl_exec($ch);
+    curl_close($ch);
 }
