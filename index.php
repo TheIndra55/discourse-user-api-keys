@@ -2,13 +2,13 @@
 
 session_start();
 
-define("BASE_URL", "https://forum.cfx.re");
-
+// Change these
+define("FORUM_URL", "https://forum.cfx.re");
 define("REDIRECT_URL", "http://localhost:8000");
 define("APP_NAME", "Your app");
 define("APP_CLIENT_ID", "yourapp");
 
-// open our keypair
+// Open our keypair
 $keypair = openssl_pkey_get_private(file_get_contents("keypair.pem"));
 
 if ($keypair === false)
@@ -18,13 +18,14 @@ if ($keypair === false)
 
 if (!isset($_GET["payload"]))
 {
-    // get public key
+    // Get the public key which will be sent to Discourse
     $pub = openssl_pkey_get_details($keypair)["key"];
     
-    // generate nonce and keep in session
+    // Generate a random nonce
     $nonce = bin2hex(random_bytes(16));
     $_SESSION["nonce"] = $nonce;
 
+    // Redirect to the authorize page
     $query = http_build_query([
         "auth_redirect"     => REDIRECT_URL,
         "application_name"  => APP_NAME,
@@ -34,14 +35,13 @@ if (!isset($_GET["payload"]))
         "public_key"        => $pub
     ]);
 
-    // redirect user to endpoint
-    $url = BASE_URL . "/user-api-key/new?" . $query;
+    $url = FORUM_URL . "/user-api-key/new?" . $query;
 
     header("Location: " . $url);
 }
 else
 {
-    // base64 decode payload and decrypt it with our keypair/private key
+    // Decrypt the payload from Discourse with our pkeypair
     $payload = base64_decode($_GET["payload"]);
 
     if (openssl_private_decrypt($payload, $data, $keypair) === false)
@@ -54,7 +54,7 @@ else
         die("Failed to decode payload");
     }
 
-    // check nonce
+    // Check the nonce
     if ($response->nonce != $_SESSION["nonce"])
     {
         die("Invalid nonce");
@@ -62,10 +62,10 @@ else
 
     $key = $response->key;
 
-    // rquest session information
+    // Fetch the current session
     $ch = curl_init();
 
-    curl_setopt($ch, CURLOPT_URL, BASE_URL . "/session/current.json");
+    curl_setopt($ch, CURLOPT_URL, FORUM_URL . "/session/current.json");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ["User-Api-Key: " . $key, "User-Api-Client-Id: " . APP_CLIENT_ID]);
 
@@ -83,6 +83,6 @@ else
         die("Failed to decode session information");
     }
 
-    // display information about current user
-    echo "<h1>Welcome, " . $session->current_user->username . "!</h1>";
+    // Display information about the current user
+    echo "<pre>" . print_r($session->current_user, true) . "</pre>";
 }
