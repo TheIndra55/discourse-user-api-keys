@@ -5,8 +5,7 @@ session_start();
 // Change these
 define("FORUM_URL", "https://forum.cfx.re");
 define("REDIRECT_URL", "http://localhost:8000");
-define("APP_NAME", "Your app");
-define("APP_CLIENT_ID", "yourapp");
+define("APPLICATION_NAME", "Your app");
 
 // Open our keypair
 $keypair = openssl_pkey_get_private(file_get_contents("keypair.pem"));
@@ -25,12 +24,16 @@ if (!isset($_GET["payload"]))
     $nonce = bin2hex(random_bytes(16));
     $_SESSION["nonce"] = $nonce;
 
+    // Generate a client ID, Discourse requires these to be globally unique
+    $clientId = bin2hex(random_bytes(48));
+    $_SESSION["clientId"] = $clientId;
+
     // Redirect to the authorize page
     $query = http_build_query([
         "auth_redirect"     => REDIRECT_URL,
-        "application_name"  => APP_NAME,
-        "client_id"         => APP_CLIENT_ID,
+        "application_name"  => APPLICATION_NAME,
         "scopes"            => "session_info",
+        "client_id"         => $clientId,
         "nonce"             => $nonce,
         "public_key"        => $pub
     ]);
@@ -67,7 +70,7 @@ else
 
     curl_setopt($ch, CURLOPT_URL, FORUM_URL . "/session/current.json");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ["User-Api-Key: " . $key, "User-Api-Client-Id: " . APP_CLIENT_ID]);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["User-Api-Key: " . $key, "User-Api-Client-Id: " . $_SESSION["clientId"]]);
 
     if (($body = curl_exec($ch)) == false)
     {
